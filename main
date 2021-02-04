@@ -1,0 +1,843 @@
+# This work done by group:20
+# WAEL ALI QOOZI,201924670,57%
+# Meshal Al akeylee,201940870,43%
+import math
+def students_list(file_name): 
+    students=[]
+    fo=open(file_name+".txt","r")
+    for j in fo:
+        try:
+            i=j.split("\t")
+            students.append({"ID":i[0],"Name":i[1],"Absences":i[2],"Midterm":i[3],"Classwork":i[4],"Final":i[5]})   
+        except:
+            pass
+    return students
+
+def regrade(file_name): #This function asks if the user wants to re-create the grade file
+    print('Do you want regenerating the total mark file?')
+    answer = input('press 1 for Yes or 2 for No')
+    
+    while answer not in '12':
+        print('Please enter a vaild number')
+        answer = input('press 1 for Yes or 2 for No: ')
+        
+    if answer == '1':
+        generate(students_list(file_name)) #<-8:17/2dec
+        print('Ok.')
+        pass
+    elif answer == '2':
+        pass
+
+def add_student(file_name): #This function is to add a new student to the database
+    data_file = open(file_name+".txt","a")
+    print('What is the student ID?')
+    ID = input_integer()
+    is_valid=Show_byID(students_list(file_name),ID,True)=="There's a student with the given ID."
+    counter=0
+    while(is_valid):
+        if( counter==0 or counter%2!=0):
+              print("There's a students with the given ID.")
+
+        ID = input_integer()
+        is_valid=Show_byID(students_list(file_name),ID,True)=="There's a student with the given ID."
+        counter=counter+1
+        if(counter%2==0 and is_valid):
+            ans=input("Do you want to return to the main menu?\n 1)-Yes\n 2)-No\n")
+            while(ans !="1" and ans !="2"):
+                print("Invalid input! Enter 1 To return to the main menu or 2 to try another ID")
+                ans=input("Do you want to return to the main menu?\n 1)-Yes\n 2)-No\n")
+            if(ans=="1"):
+                data_file.close()
+                return 0
+    name = input_name()
+    print('How many absences?')
+    absences = input_integer()
+    print('How much Midterm score ?')
+    midterm = input_integer_float()
+    midterm = check_range(midterm, 'midterm')
+    print('How much Classwork score ?')
+    classwork = input_integer_float()
+    classwork = check_range(classwork, 'classwork')
+    print('How much Final score ?')
+    final = input_integer_float()
+    final = check_range(final, 'final')
+    new_student = "\n{}\t{}\t{}\t{}\t{}\t{}".format(ID, name, absences, midterm, classwork, final)
+    data_file.write(new_student)
+    data_file.close()
+    regrade(file_name)
+
+def remove(file_name): #This function asks the user if he wants to delete a requester by name or by id
+    print('press 1 for Name or 2 for ID')
+    a = input('1 or 2: ')
+    while a not in '12':
+        print('Please enter 1 or 2')
+        a = input('1 or 2: ')
+    if a == '1':
+        remove_by_name(file_name)
+    elif a == '2':
+        remove_by_id(file_name)
+
+def check_input(num): #This function checks if the entry is a integer or a float number or a alpha 
+    try:
+        num = float(num)
+        if num.is_integer() :
+            return 'integer'
+        else:
+            return 'float'
+    except ValueError:
+        num = num
+        if num.isalpha():
+            return 'isalpha'
+        else:
+            return 'notalpha'
+    
+def input_integer(): #This function is to take an integer number from the user and re-request the entry in case it was not
+    num = input('Enter the value: ')
+    while ('integer' != check_input(num)) or (int(num) < 0):
+        print('Enter an integer number greater than 0')
+        num = input('Enter the value again: ')
+    return num
+
+def input_integer_float(): #This function is to take an integer or float number from the user and re-request the entry in case it was not
+    num = input('Enter the value: ')
+    while 'integer' != check_input(num) and 'float' != check_input(num):
+        print('Enter an integer or float number')
+        num = input('Enter the value again: ')
+
+    return num
+    
+def check_range(mark, mark_title):
+    if mark_title == 'midterm':
+        max_per = 35
+    if mark_title == 'classwork':
+        max_per = 25
+    if mark_title == 'final':
+        max_per = 40
+    while (0 > float(mark) or float(mark) > max_per):
+        print('The number entered is out of range, the highest mark for {} is {} and the smallest number is 0'.format(mark_title, max_per))
+        mark = input_integer_float()
+    return mark
+    
+        
+
+def input_name(): #This function is to take the name from the user and only accept letters (a-z)
+    name = input('Enter the name: ')
+    name_ = name.replace(' ', '').replace('-', '').replace('\t', '')
+    while 'isalpha' != check_input(name_):
+        print('Enter alphabet (a-z)')
+        name = input('Enter the name again: ')
+        name_ = name.replace(' ', '').replace('-', '').replace('\t', '')
+    return name
+
+def remove_by_id(file_name): #This function is to delete a student from the database by an identifier
+    students_lis = students_list(file_name)
+    print('Student ID')
+    ID = input_integer()
+    ID = ID.strip()
+    check = 1
+    for student in students_lis:
+        if ID == student['ID']: 
+                print_TheReport(student)
+                print('You sure ?')
+                check = 0
+                answer = input('1 for Yes and 2 for No: ')
+                while answer not in '12':
+                    print('Please enter 1 or 2')
+                    answer = input('1 for Yes and 2 for No: ')
+                if answer == '1':
+                    with open(file_name+".txt", "r") as readdata:
+                        lines = readdata.readlines()
+                    with open(file_name+".txt", "w") as writedata:
+                        for line in lines:
+                            if student['ID'] != line.split("\t")[0]:
+                                writedata.write(line)
+                    regrade(file_name)
+                elif answer == '2':
+                    print('ok')
+                    check = 0
+                break
+    if check:
+        print('There is no student with this ID')
+        
+
+def remove_by_name(file_name): #This function is to delete a student from the database by the name
+    students_lis = students_list(file_name)
+    name = input_name()
+    check = 1
+    list = []
+    for student in students_lis:
+        if name.lower() == student['Name'].lower():
+            list.append(student)
+    if len(list) >= 1:
+        count = 1
+        for student in list:
+            #print("({})".format(count), "\tID\t\tName\t\tAbsences\tMidterm\t\tClasswork\tFinal\n\t{}\t{}\t\t{}\t\t{}\t\t{}\t\t{}"
+                     # .format(student['ID'],student['Name'],student['Absences'],student['Midterm'],student['Classwork'],student['Final']))
+            print('\n({})'.format(count))
+            print_TheReport(student)
+            count = count + 1
+        answer1 = (input('Please select the number of the student: '))
+        while 'integer' != check_input(answer1) or (0 >= float(answer1) or float(answer1) >= count):
+            print('Please enter the correct number')
+            answer1 = (input('Select the number of the student: '))
+        print('You sure ?')
+        student_posstion = int(answer1) - 1
+        answer2 = input('1 for Yes and 2 for No: ')
+        if answer2 == '1':
+            with open(file_name+".txt", "r") as readdata:
+                  lines = readdata.readlines()
+            with open(file_name+".txt", "w") as writedata:
+                  for line in lines:
+                        if list[student_posstion]['ID'] != line.split("\t")[0]:
+                             writedata.write(line)
+            regrade(file_name)
+        elif answer2 == '2':
+            print('ok')
+    if list == []:
+        print('There is no student with this name')
+    
+            
+
+def modify(file_name):#This function is to modify the student's data in terms of name, ID, number of absences, and others.
+    students_lis = students_list(file_name)
+    print('Student ID')
+    ID = input_integer()
+    ID = ID.strip()
+    check = 1
+    for student in students_lis:
+            if ID == student['ID']: 
+                check = 0
+                print_TheReport(student)
+                print("\n1)- ID\n2)- Name\n3)- Absences\n4)- Midterm\n5)- Class work\n6)- Final")
+                answer1 = input('Select your choise: ')
+                while answer1 not in '123456':
+                    print('Please enter a number from 1 to 6')
+                    answer1 = input('Select your choise: ')
+                    
+                if answer1 == '1':
+                    print('the new student ID')
+                    new_id = input_integer()
+                    is_valid=Show_byID(students_list(file_name),new_id,True)=="There's a student with the given ID."
+                    counter=0
+                    while(is_valid):
+                        if( counter==0 or counter%2!=0):
+                                print("There's a students with the given ID.")
+
+                        new_id = input_integer()
+                        is_valid=Show_byID(students_list(file_name),new_id,True)=="There's a student with the given ID."
+                        counter=counter+1
+                        if(counter%2==0 and is_valid):
+                               ans=input("Do you want to return to the main menu?\n 1)-Yes\n 2)-No\n")
+                               while(ans !="1" and ans !="2"):
+                                        print("Invalid input! Enter 1 To return to the main menu or 2 to try another ID")
+                                        ans=input("Do you want to return to the main menu?\n 1)-Yes\n 2)-No\n")
+                               if(ans=="1"):
+                                    return 0
+
+
+                    student['ID'] = new_id
+                elif answer1 == '2':
+                    new_name = input_name()
+                    student['Name'] = new_name
+                elif answer1 == '3':
+                    print('How many absences?')
+                    new_absences = input_integer()
+                    student['Absences'] = new_absences
+                elif answer1 == '4':
+                    print('How much Midterm score ?')
+                    new_midterm = input_integer_float()
+                    new_midterm = check_range(new_midterm, 'midterm')
+                    student['Midterm'] = new_midterm
+                elif answer1 == '5':
+                    print('How much Classwork score ?')
+                    new_classwork = input_integer_float()
+                    new_classwork = check_range(new_classwork, 'classwork')
+                    student['Classwork'] = new_classwork
+                elif answer1 == '6':
+                    print('How much Final score ?')
+                    new_final = input_integer_float()
+                    new_final = check_range(new_final, 'final')
+                    student['Final'] = new_final
+                    
+                print('You sure ?')
+                answer2 = input('Select your choise 1 for Yes 2 for No: ')
+                while answer2 not in '12':
+                    print('Please enter 1 or 2')
+                    answer2 = input('Select your choise: ')
+                    
+                if answer2 == '1':
+                    regrade(file_name)
+                    with open(file_name+".txt", "r") as readdata:
+                            lines = readdata.readlines()
+                    with open(file_name+".txt", "w") as writedata:
+                        for line in lines:
+                            if ID != line.split("\t")[0]:
+                                writedata.write(line)
+                    data_file = open(file_name+".txt","a")
+                    new_student = "\n{}\t{}\t{}\t{}\t{}\t{}".format(student['ID'], student['Name'], student['Absences'], student['Midterm'], student['Classwork'], student['Final'])
+                    data_file.write(new_student)
+                    data_file.close()
+                    print('Modified successfully')
+                    #regrade(file_name)
+                else:
+                    print('Data modification process has been canceled')
+    if check:
+        print('There is no student with this ID')
+                    
+
+#print the given data 
+def print_TheReport(students_info):
+    if(type(students_info)!= list):
+        students_list=[]
+        students_list.append(students_info)
+        students_info=students_list
+    if(len(students_info)==0):
+        return 0
+    #print("ID\t\tName\t\tAbsences\tMidterm\t\tClasswork\tFinal")
+    print("%-5s"%"ID","%20s"%"Name","%15s"%"Absences","%15s"%"Midterm","%15s"%"Classwork","%15s"%"Final")
+    for j in students_info:
+        i=j
+        print("%-10s"%i["ID"],"%15s"%i["Name"],"%15d"%int(i["Absences"].strip()),"%15.2f"%float(i["Midterm"].strip()),"%15.2f"%float(i["Classwork"].strip()),"%15.2f"%float(i["Final"].strip()))
+
+
+
+ # show the main menu       
+def Show_MainMenu():
+    print("1)-Generate A New File")
+    print("2)-Show students that meet a specific criteria")
+    print("3)-Add a student to the class")
+    print("4)-Remove a student from the class")
+    print("5)-Modify a student's information")
+    print("6)-Show the data of a student")
+    print("7)-Terminate the program")
+    print("---------------")
+#show the criteria menu
+def Show_typesMenu():
+     print("1)-Absences")
+     print("2)-Midterm")
+     print("3)-Classwork")
+     print("4)-Final")
+     print("5)-Exit")
+     print("---------------")
+def Show_criteriaMenu():
+       print("1)-Less than")
+       print("2)-Larger than")
+       print("3)-Exit")
+       print("---------------")
+def Show_SearchMenu():
+       print("1)-Search by Name")
+       print("2)-Search by ID")
+       print("3)-Exit")
+       print("---------------")
+#validate user's input *types tab*
+def typeHandler():
+    Show_typesMenu()
+    type_=input("what are you looking for? ")
+    validator_=validator(type_,"4")
+    if(validator_=="exit"):
+        return False #GO TO the previous menu
+    elif(validator_=="invalid"):
+              # gives the user one last try 
+               type_=input("what are you looking for? ")
+               validator_=validator(type_,"4")
+               if(validator_=="invalid" or validator_=="exit"):
+                   return False # go to the previous menu
+    return (True,int(type_)) # every thing works
+#validate user's input *criteria tab*
+#--------------------------------
+# gives the user two chances to enter the right input then closes.
+# invalid inputs are :
+#                (1)
+#                (2)
+#                (3)
+# returns choice's user, optimal output (true,1-3), first item is to make sure every thing works fine.
+#--------------------------------
+def criteriaHandler():
+    Show_criteriaMenu()
+    criteria_=input("please choose a criteria ")
+    validator_=validator(criteria_,"2")
+    validator____=(validator_!="invalid" and validator_!="exit")
+    while(validator____==False): #infinit loop stops only when valid answer given, {works only if the given answer is invalid or to exit the tab as the first condition in the loop will obviously exit the function.}
+            if(validator_=="exit"):
+                 return False #GO TO the previous menu
+            elif(validator_=="invalid"):
+              # gives the user one last try 
+               criteria_=input("please choose a criteria ")
+               validator_=validator(criteria_,"2")
+               validator____=(validator_!="invalid" and validator_!="exit")
+               if(validator_=="exit"):
+                   return False # go to the previous menu
+
+
+    return (True,int(criteria_)) # go to next step, every thing works fine.
+
+    
+    
+
+def validator(choice,condition):
+    #-------------
+    # TODO:
+    #    1)- Validate the user's input* 
+    #    2)- returns invalid\valid\exit value, if the is valid returns valid invalid returns invalid 8 or 4 returns exit
+    #    3)- *input=> if the condition to 6 then it's types' tab if it's 4 then it's type's tab 2 if it's criteria's tab if it's search tab then it's 0
+    #    4)- THIS FUNCTION ONLY VALIDATES THE TABS FUNCTIONS
+    #--------------
+    if(condition=="6"):
+        try:
+            choice=int(choice)
+            if((choice<1 or choice>6) and choice !=7):
+                raise ValueError
+            elif(choice==7):
+                return "exit"
+        except ValueError:
+            print("invalid input,Enter a number between 1 and 6 or Enter 7 to exit the program")
+            return "invalid"
+       
+    elif(condition=="4"):
+        try:
+            choice=int(choice)
+            if((choice<1 or choice>4) and choice!=5):
+                raise ValueError
+            elif(choice==5):
+                return "exit"
+        except ValueError:
+            print("invalid input,Enter a number between 1 and 4 or Enter 5 to move to the previous menu")
+            return "invalid"
+
+    elif(condition=="2"):
+        try:
+            choice=int(choice)
+            if((choice<1 or choice>2) and choice!=3):
+                raise ValueError
+            elif(choice==3):
+                return "exit"
+        except ValueError:
+            print("invalid input,Enter  1 or 2  or Enter 3 to move to the previous menu")
+            return "invalid"
+    elif(condition=="1"):
+        try:
+            choice=int(choice)
+            if((choice!=1) and choice!=2):
+                raise ValueError
+            elif(choice==2):
+                return "exit"
+        except ValueError:
+            print("invalid input,Enter  1 or 2  or Enter E to exit the tab")
+            return "invalid"
+    elif(condition=="0"):
+        try:
+            choice=int(choice)
+            if((choice<1 or choice>2) and choice!=3):
+                raise ValueError
+            elif(choice==3):
+                return "exit"
+        except ValueError:
+            print("invalid input,Enter  1 or 2  or Enter 3 to move to the previous menu")
+            return "invalid"
+    return "valid"
+
+#---------
+#TO-DO:
+#handles the second tab...
+#ALSO validates the user's input
+#THEN it sends A VALID values to Show_spec which returns a list of students whom match the criteria given.
+#We're passing show_spec to print_TheReport to print the list.
+#---------
+def ShowStudents_spec_tab(file_name):
+               type_=0
+               while(type_==0):
+                   criteria=0
+                   handler=typeHandler()
+                   if(type(handler) is tuple ):
+                    type_=handler[1]
+                    if (type_==1):
+                      value_=input("Enter a value ")#the value depends on the type. if the type is 1 then the value will be absecnes and so on.
+                      is_valid=True
+                      while(is_valid):
+                          try:
+                              is_valid=((float(value_)>-1 or value_isdigit())==False)
+                          except:
+                              is_valid=True
+                          if(is_valid==False): #every thing works fine..exit this block
+                              break
+                          print("invalid input,You can enter E to exit the current tab")
+                          value_=input("Enter a value ")
+                          is_valid=True
+                          if(value_ =="E"):
+                              type_=0
+                              criteria=1
+                              break
+                      while(criteria==0):
+                                  criteria=criteriaHandler()
+                                  if(type(criteria) is tuple):
+                                      criteria=criteria[1]
+                                      if(criteria==1):
+                                                print_TheReport(show_spec("Absences",value_,"Less",students_list(file_name)))
+                                      elif(criteria==2):
+                                                print_TheReport(show_spec("Absences",value_,"Larger",students_list(file_name)))
+                                  else:
+                                        criteria=-1 # exiting the menu
+                                        type_=0
+                    elif (int(type_)==2):
+                      value_=input("Enter a value ")#this value depends on the type. if the type is 1 then the value will be absecnes and so on.
+                      is_valid=True
+                      while(is_valid):
+                          try:
+                              is_valid=((float(value_)>-1)==False)
+                          except:
+                              is_valid=True
+                          if(is_valid==False): #every thing works fine..exit this block
+                              break
+                          print("invalid input,You can enter E to exit the current tab")
+                          value_=input("Enter a value ")
+                          is_valid=True
+                          if(value_ == "E"):
+                              type_=0
+                              criteria=1
+                              break
+
+                      criteria=0
+                      while(criteria==0):
+                                  criteria=criteriaHandler()
+                                  if(type(criteria) is tuple):
+                                      criteria=criteria[1]
+                                      if(criteria==1):
+                                                print_TheReport(show_spec("Midterm",value_,"Less",students_list(file_name)))
+                                      elif(criteria==2):
+                                                print_TheReport(show_spec("Midterm",value_,"Larger",students_list(file_name)))
+                                  else:
+                                        criteria=-1 # exiting the menu
+                                        type_=0
+                
+                    elif (type_==3):
+                      value_=input("Enter a value ")#the value depends on the type. if the type is 1 then the value will be absecnes and so on.
+                      criteria=0
+                      is_valid=True
+                      while(is_valid):
+                          try:
+                              is_valid=((float(value_)>-1)==False)
+                          except:
+                              is_valid=True
+                          if(is_valid==False): #every thing works fine..exit this block
+                              break
+                          print("invalid input,You can enter E to exit the current tab")
+                          value_=input("Enter a value ")
+                          is_valid=True
+                          if(value_ == "E"):
+                              type_=0
+                              criteria=1
+                              break
+
+
+                      while(criteria==0):
+                                  criteria=criteriaHandler()
+                                  if(type(criteria) is tuple):
+                                      criteria=criteria[1]
+                                      if(criteria==1):
+                                                print_TheReport(show_spec("Classwork",value_,"Less",students_list(file_name)))
+                                      elif(criteria==2):
+                                                print_TheReport(show_spec("Classwork",value_,"Larger",students_list(file_name)))
+                                  else:
+                                        criteria=-1 # exiting the menu
+                                        type_=0
+                    elif (type_==4):
+                      value_=input("Enter a value ")#the value depends on the type. if the type is 1 then the value will be absecnes and so on.
+                      criteria=0
+                      is_valid=True
+                      while(is_valid):
+                          try:
+                              is_valid=((float(value_)>-1)==False)
+                          except:
+                              is_valid=True
+                          if(is_valid==False): #every thing works fine..exit this block
+                              break
+                          print("invalid input,You can enter E to exit the current tab")
+                          value_=input("Enter a value ")
+                          is_valid=True
+                          if(value_ =="E"):
+                              type_=0
+                              criteria=1
+                              break
+
+
+                      while(criteria==0):
+                                  criteria=criteriaHandler()
+                                  if(type(criteria) is tuple):
+                                      criteria=criteria[1]
+                                      if(criteria==1):
+                                                print_TheReport(show_spec("Final",value_,"Less",students_list(file_name)))
+                                      elif(criteria==2):
+                                                print_TheReport(show_spec("Final",value_,"Larger",students_list(file_name)))
+                                  else:
+                                        criteria=-1 # exiting the menu
+                                        type_=0
+                    if(value_ !="E" and criteria!=-1):
+                        type_=5
+                   else:
+                       type_=5
+                       choice=0
+
+#handles the sixth tab which deals with searching by name or id 
+def show_by_name_id_tab(file_name,search_byid):
+                To_contiune=True
+                if(search_byid):
+                  while(To_contiune):
+                    id=input("Enter the student's ID: ")
+                    validator_=True
+                    while(bool(id)==False or validator_==False):#making sure that the entered id is valid (HAS A VALUE)
+                             print("please Enter a valid ID or Enter E to exit the tab")
+                             id=input("Enter the student's ID: ")
+                    if(str(id)=="E"):
+                          validator_=True #exit this block
+                          To_contiune=False
+                          choice=0
+                    else:
+                           if(Show_byID(students_list(file_name),id)=="There's no student with the given ID."):
+                                 is_input_valid=True
+                                 while(is_input_valid==True):
+                                       ans=input("There's no student with the given ID, Do you want to try again?\n 1)-Yes\n 2)-No\n")
+                                       validator__=validator(ans,"1")
+                                       if(validator__=="valid"):
+                                           is_input_valid=False #>>>Go to previous block 
+                                           break
+                                       elif(validator__=="exit"):
+                                           To_contiune=False
+                                           choice=0
+                                           break# go to main menu 
+
+
+
+
+                                       
+                           else:
+                                   To_contiune=False
+                                   choice=0
+                else:
+                   while(To_contiune):
+                    name=input("Enter the student's Name: ")
+                    validator_=True
+                    while(bool(name)==False or validator_==False):#making sure that the entered id is valid (HAS A VALUE)
+                             print("please Enter a valid Name or Enter E to exit the tab")
+                             name=input("Enter the student's Name: ")
+                    if(str(name)=="E"):
+                          validator_=True #exit this block
+                          To_contiune=False
+                          choice=0
+                    else:
+                           if(Show_byname(students_list(file_name),name)=="There's no student with the given name."):
+                                 is_input_valid=True
+                                 while(is_input_valid==True):
+                                       ans=input("There's no student with the given Name, Do you want to try again?\n 1)-Yes\n 2)-No\n")
+                                       validator__=validator(ans,"1")
+                                       if(validator__=="valid"):
+                                           is_input_valid=False #>>>Go to previous block 
+                                           break
+                                       elif(validator__=="exit"):
+                                           To_contiune=False
+                                           choice=0
+                                           break# go to main menu 
+                                       
+                           else:
+                                   To_contiune=False
+                                   choice=0
+#Creates the file if it doesn't exist
+def create_file(file_name):
+    try:
+        file=open(file_name+".txt","r")
+    except:
+        file=open(file_name+".txt","w")
+        file.close()
+def main():
+    #constant:
+    file_name="Students_file"
+    choice=0
+    create_file(file_name)
+
+    while(choice==0):
+        try:
+            print(" ")
+            Show_MainMenu()
+            choice=input("Please select a number for the top menu...")
+            working=False
+            while(validator(choice,"6")=="invalid"):
+                choice=input("Please select a number for the top menu...")
+            choice=int(choice)
+            if(choice==1):
+                generate(students_list(file_name))
+                choice=0# return to main menu
+            elif(choice==2):
+                ShowStudents_spec_tab(file_name)
+                choice=0# return to main menu
+            elif(choice==3):
+                add_student(file_name)
+                #add
+                choice=0# return to main menu
+                #--
+            elif(choice==4):
+                remove(file_name)
+                #remove
+                choice=0# return to main menu
+                #--
+            elif(choice==5):
+                modify(file_name)
+                #modify
+                choice=0# return to main menu
+                #--
+            elif(choice==6):
+                #---------------------------------------------------------------------------------------------------------------------------------------------------
+                # This tab is for searching the students By either the name or the ID
+                # the below code contains a validator to the user's input.
+                # we're passing the VALID values to show_by_name_id_tab which handles the search tab and validates the user's input to the tab then pass the valid                    #                                                                                                                                        values to                    #Show_byname or Show_byid depending on search_byid which the below code passes which is the user's choice of the type of search.
+                #---------------------------------------------------------------------------------------------------------------------------------------------------
+                print(" ")
+                try:
+                 to_exit=False
+                 while(to_exit==False):
+                      Show_SearchMenu()
+                      pass_To_next=False
+                      while(pass_To_next!=True):
+                               ans=input("Please choose from the above menu ")
+                               validator__=validator(ans,"0")
+                               search_byid=False
+                               if(validator__=="exit"):
+                                        to_exit=True
+                                        choice=0
+                                        break
+                               elif(validator__=="valid"):
+                                    pass_To_next=True
+                                    if(ans=="1"):
+                                          search_byid=False
+                                          to_exit=False
+                                          show_by_name_id_tab(file_name,search_byid)
+                                    elif(ans=="2"):
+                                         search_byid=True
+                                         show_by_name_id_tab(file_name,search_byid)
+                                         to_exit=False
+                except:
+                    pass
+            elif(choice==7):
+                return "" #closes the program
+
+        except TypeError:
+            pass
+
+
+#----------------------------------
+# Generates new text file with the format:
+# NAME ID  TOTALMARK*
+# *TotaLMark=MID+CLASSWORK+FINAL
+#----------------------------------
+
+def generate(students_list):
+    #------------------------------------------------------------------------------------
+    # original format :
+    # ID	Name	   Absences	     Midterm(35%)      Classwork(25%)          Final(40%)
+    # output format:
+    # Name  ID    TotalMark
+    #------------------------------------------------------------------------------------
+    _students_new_format={ 
+                            "Name":[],
+                            "ID":[],
+                            "TotalMark":[]
+                         }
+    tm_file = open("t_result.txt", "w")
+    for student in students_list:
+        try:
+           record=student["Name"] + " " + student["ID"] + " " + str(GetTotalMark(student))
+           tm_file.write(record+"\n")
+           
+        except :
+            pass
+    tm_file.close()
+    print("A new file has been generated successfully!")
+  
+   
+    
+#Calculates total mark..      
+def GetTotalMark(students_list):
+    sum_=(float(students_list["Midterm"])+float(str(students_list["Final"]).rstrip())+float(students_list["Classwork"]))
+    return sum_
+#-----------------------------------------------------------------------------------------------
+#search for a student by ID and returns his full information otherwise returns an error message.
+#Checks whether the id exists or not and that only works if to_check_only set to TRUE.
+#----------------------------------------------------------------------------------------------- 
+def Show_byID(students_list,ID,to_check_only=False):
+    matches=[]
+    try:
+        ID=(str(ID).strip())
+    except:
+        pass
+    for i in students_list:
+        if(i["ID"]==ID):
+            matches.append(i)
+            if(to_check_only):
+                return "There's a student with the given ID."
+            print_TheReport(matches)# passing it as a last because students_list function handles lists only!!
+    if(len(matches)==0):
+       return "There's no student with the given ID."
+#----------------------------------------------------------------------------------------------
+#search for a student by ID and returns his full information otherwise returns an error message.
+#----------------------------------------------------------------------------------------------
+def Show_byname(students_list,name):
+    matches=[]
+    name=name.rstrip()
+    name=name.lstrip()
+    for i in students_list:
+        if(i["Name"].lower()==name.lower()):
+            matches.append(i)
+    if(len(matches)==0):
+        return "There's no student with the given name."
+    else:
+        print_TheReport(matches)# passing it as a last because students_list function handles lists only!!
+
+#---------------------------------------------------------------------------------
+# *students_list:list dictionaries of the students sorted by the original format!
+# *Thie function returns a list of students whom meet the specific given criteria!
+#---------------------------------------------------------------------------------
+def show_spec(type_,value_,criteria,students_list):
+    matches=[]
+    if(criteria=="Less"):
+        if(type_=="Absences"):
+            for i in students_list:
+                if(int(i["Absences"])<int(value_)):
+                    matches.append({"ID":i["ID"],"Name":i["Name"],"Absences":i["Absences"],"Midterm":i["Midterm"],"Classwork":i["Classwork"],"Final":i["Final"]})   
+                    
+        elif(type_=="Midterm"):
+            for i in students_list:
+                if(float(i["Midterm"])<float(value_)):
+                    matches.append({"ID":i["ID"],"Name":i["Name"],"Absences":i["Absences"],"Midterm":i["Midterm"],"Classwork":i["Classwork"],"Final":i["Final"]})   
+            
+        elif(type_=="Classwork"):
+            for i in students_list:
+                if(float(i["Classwork"])<float(value_)):
+                    matches.append({"ID":i["ID"],"Name":i["Name"],"Absences":i["Absences"],"Midterm":i["Midterm"],"Classwork":i["Classwork"],"Final":i["Final"]})   
+            
+        elif(type_=="Final"):
+            for i in students_list:
+                if(float(i["Final"])<float(value_)):
+                    matches.append({"ID":i["ID"],"Name":i["Name"],"Absences":i["Absences"],"Midterm":i["Midterm"],"Classwork":i["Classwork"],"Final":i["Final"]})   
+        
+    elif(criteria=="Larger"):
+        if(type_=="Absences"):
+            for i in students_list:
+                if(int(i["Absences"])>int(value_)):
+                    matches.append({"ID":i["ID"],"Name":i["Name"],"Absences":i["Absences"],"Midterm":i["Midterm"],"Classwork":i["Classwork"],"Final":i["Final"]})   
+                    
+        elif(type_=="Midterm"):
+            for i in students_list:
+                if(float(i["Midterm"])>float(value_)):
+                    matches.append({"ID":i["ID"],"Name":i["Name"],"Absences":i["Absences"],"Midterm":i["Midterm"],"Classwork":i["Classwork"],"Final":i["Final"]})   
+
+        elif(type_=="Classwork"):
+            for i in students_list:
+                if(float(i["Classwork"])>float(value_)):
+                    matches.append({"ID":i["ID"],"Name":i["Name"],"Absences":i["Absences"],"Midterm":i["Midterm"],"Classwork":i["Classwork"],"Final":i["Final"]})   
+
+        elif(type_=="Final"):
+            for i in students_list:
+                if(float(i["Final"])>float(value_)):
+                    matches.append({"ID":i["ID"],"Name":i["Name"],"Absences":i["Absences"],"Midterm":i["Midterm"],"Classwork":i["Classwork"],"Final":i["Final"]}) 
+    if(len(matches)==0):
+        print("There are no students meet the provided criteria")
+    return matches
+main()
